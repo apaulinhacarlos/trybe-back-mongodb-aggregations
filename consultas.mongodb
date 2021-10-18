@@ -158,6 +158,162 @@ db.movies.aggregate([
   },
 ]);
 
+//desafio 6
+use("aggregations");
+db.movies.aggregate([
+  {
+    $match: {
+      awards: { $regex: /Won (\d+) Oscar/ },
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      maior_rating: { $max: "$imdb.rating" },
+      menor_rating: { $min: "$imdb.rating" },
+      media_rating: { $avg: "$imdb.rating" },
+      desvio_padrao: { $stdDevSamp: "$imdb.rating" },
+    },
+  },
+  {
+    $project: {
+      _id: false,
+      maior_rating: true,
+      menor_rating: true,
+      media_rating: { $round: ["$media_rating", 1] },
+      desvio_padrao: { $round: ["$desvio_padrao", 1] },
+    },
+  },
+]);
+
+//desafio 7
+use("aggregations");
+db.movies.aggregate([
+  {
+    $match: {
+      languages: "English",
+    },
+  },
+  { $unwind: "$cast" },
+  {
+    $group: {
+      _id: "$cast",
+      numeroFilmes: { $sum: 1 },
+      mediaIMDB: { $avg: "$imdb.rating" },
+    },
+  },
+  {
+    $project: {
+      _id: true,
+      numeroFilmes: true,
+      mediaIMDB: { $round: ["$mediaIMDB", 1] },
+    },
+  },
+  {
+    $sort: {
+      numeroFilmes: -1,
+      _id: -1,
+    },
+  },
+]).itcount();
+
+//desafio 8
+use("aggregations");
+db.air_alliances.aggregate([
+  { $unwind: "$airlines" },
+  {
+    $lookup: {
+      from: "air_routes",
+      localField: "airlines",
+      foreignField: "airline.name",
+      as: "airline_routes",
+    },
+  },
+  { $unwind: "$airline_routes" },
+  {
+    $match: {
+      "airline_routes.airplane": { $in: ["747", "380"] },
+    },
+  },
+  {
+    $group: {
+      _id: "$name",
+      totalRotas: { $sum: 1 },
+    },
+  },
+  {
+    $sort: {
+      totalRotas: -1,
+    },
+  },
+  { $limit: 1 },
+]);
+
+// Desafio 9
+use("aggregations");
+db.trips.aggregate([
+  {
+    $match: {
+      birthYear: { $exists: true, $ne: "" },
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      maiorAnoNascimento: { $max: { $toInt: "$birthYear" } },
+      menorAnoNascimento: { $min: { $toInt: "$birthYear" } },
+    },
+  },
+  {
+    $project: {
+      _id: false,
+    },
+  },
+]);
+
+//Desafio 10
+use("aggregations");
+db.trips.aggregate([
+  {
+    $group: {
+      _id: "$usertype",
+      duracaoMedia: {
+        $avg: {
+          $divide: [
+            { $subtract: ["$stopTime", "$startTime"] },
+            (60 * 60000),
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: false,
+      tipo: "$_id",
+      duracaoMedia: { $round: ["$duracaoMedia", 2]},
+    },
+  },
+  {
+    $sort: {
+      duracaoMedia: 1,
+    },
+  },
+]);
 
 use("aggregations");
-db.movies.find();
+db.trips.find();
+
+
+
+// Desafio 11
+// -> Determine qual o dia da semana com maior número de viagens iniciadas.
+// Dica: Utilize o operador $dayOfWeek para extrair o dia da semana como um número de uma data.
+
+// O resultado da sua query deve ter exatamente o seguinte formato (incluindo a ordem dos campos):
+
+// { "diaDaSemana" : <dia_da_semana>, "total" : <total_de_viagens> }
+
+use("aggregations");
+db.trips.find();
+
