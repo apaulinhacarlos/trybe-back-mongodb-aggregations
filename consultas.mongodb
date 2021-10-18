@@ -301,19 +301,124 @@ db.trips.aggregate([
   },
 ]);
 
-use("aggregations");
-db.trips.find();
-
-
-
 // Desafio 11
-// -> Determine qual o dia da semana com maior número de viagens iniciadas.
-// Dica: Utilize o operador $dayOfWeek para extrair o dia da semana como um número de uma data.
+use("aggregations");
+db.trips.aggregate([
+  {
+    $project: {
+      dia: { $dayOfWeek: "$startTime" },
+    },
+  },
+  {
+    $group: {
+      _id: "$dia",
+      total: { $sum: 1 },
+    },
+  },
+  {
+    $project: {
+      diaDaSemana: "$_id",
+      total: "$total",
+      _id: false,
+    },
+  },
+  {
+    $sort: { total: -1 },
+  },
+  { $limit: 1 },
+]);
 
-// O resultado da sua query deve ter exatamente o seguinte formato (incluindo a ordem dos campos):
+// Desafio 12
+use("aggregations");
+db.trips.aggregate([
+  {
+    $project: {
+      dia: { $dayOfWeek: "$startTime" },
+      startStationName: true,
+    },
+  },
+  {
+    $group: {
+      _id: {
+        dia: "$dia",
+        startStationName: "$startStationName",
+      },
+      total: { $sum: 1 },
+    },
+  },
+  {
+    $project: {
+      nomeEstacao: "$_id.startStationName",
+      total: "$total",
+      _id: false,
+    },
+  },
+  {
+    $sort: { total: -1 },
+  },
+  { $limit: 1 },
+]);
 
-// { "diaDaSemana" : <dia_da_semana>, "total" : <total_de_viagens> }
+// Desafio 13
+use("aggregations");
+db.trips.aggregate([
+  {
+    $match: {
+      startTime: {
+        $gte: ISODate("2016-03-10"),
+        $lt: ISODate("2016-03-11"),
+      },
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      duracaoMediaEmMinutos: {
+        $avg: {
+          $divide: [
+            { $subtract: ["$stopTime", "$startTime"] },
+            60000,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      duracaoMediaEmMinutos: { $round: ["$duracaoMediaEmMinutos"] },
+      _id: false,
+    },
+  },
+]);
+
+// Desafio 14
+use("aggregations");
+db.trips.aggregate([
+  {
+    $group: {
+      _id: "$bikeid",
+      duracaoMedia: {
+        $avg: {
+          $divide: [
+            { $subtract: ["$stopTime", "$startTime"] },
+            60000,
+          ],
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      bikeId: "$_id",
+      duracaoMedia: { $ceil: ["$duracaoMedia"] },
+      _id: false,
+    },
+  },
+  {
+    $sort: { duracaoMedia: -1 },
+  },
+  { $limit: 5 },
+]);
 
 use("aggregations");
 db.trips.find();
-
