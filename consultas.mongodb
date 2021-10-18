@@ -1,19 +1,40 @@
 use("aggregations");
 db.movies.find();
 
+//desafio 1
 use("aggregations");
 db.movies.aggregate([
-  { 
+  {
     $match: {
-      $and: [
-        { "imdb.rating": { $gte: 7 } },
-        { genres: { $nin: ["Crime", "Horror"] } },
-        { rated: { $in: ["PG", "P"] } },
-        { languages: { $in: ["English", "Spanish"] } },
-
-
-      ]
-
-    }
+      "imdb.rating": { $gte: 7 },
+      genres: { $nin: ["Crime", "Horror"] },
+      rated: { $in: ["PG", "G"] },
+      languages: { $all: ["English", "Spanish"] },
+    },
   },
 ]).itcount();
+
+//desafio 2
+use("aggregations");
+db.movies.aggregate([
+  {
+    $match: {
+      "imdb.rating": { $gte: 7 },
+      genres: { $nin: ["Crime", "Horror"] },
+      rated: { $in: ["PG", "G"] },
+      languages: { $all: ["English", "Spanish"] },
+    },
+  },
+  {
+    $project: {
+      titulo: "$title",
+      avaliado: "$rated",
+      notaIMDB: "$imdb.rating",
+      votosIMDB: "$imdb.votes",
+      ano: "$year",
+      _id: false,
+    },
+  },
+]);
+
+// { "titulo" : "A Streetcar Named Desire", "avaliado" : "PG", "notaIMDB" : 8.1, "votosIMDB" : 72364, "ano" : 1951 }
