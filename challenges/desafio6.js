@@ -1,7 +1,7 @@
 db.movies.aggregate([
   {
     $match: {
-      awards: { $regex: /Won (\d+) Oscar/ },
+      awards: { $regex: /Won+\s+[0-9]+\s+Oscar/g },
     },
   },
   {
@@ -16,8 +16,8 @@ db.movies.aggregate([
   {
     $project: {
       _id: false,
-      maior_rating: true,
-      menor_rating: true,
+      maior_rating: { $round: ["$maior_rating", 1] },
+      menor_rating: { $round: ["$menor_rating", 1] },
       media_rating: { $round: ["$media_rating", 1] },
       desvio_padrao: { $round: ["$desvio_padrao", 1] },
     },
